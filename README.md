@@ -15,7 +15,7 @@
 
 ## 一些概念
 
-* [](./concept.md)
+* [concept](./concept.md)
 
 ## 参考资料
 

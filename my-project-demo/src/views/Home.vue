@@ -1,6 +1,10 @@
 <template>
   <div class="home">
     <div style="width:500px;height:500px;" ref="previewContainer" id="previewContainer"></div>
+    <div>
+      <input placeholder="X" v-model="addX" style="height:30px;line-height:30px;margin-right:20px;margin-left:20px;text-indent:10px;"/>
+      <input placeholder="Y" v-model="addY" style="height:30px;line-height:30px;margin-right:20px;text-indent:10px;"/>
+    </div>
     <div style="width:0;height:0;overflow:hidden;">
       <ul class="preview-coordinate-ul" id="preview-coordinate-ul" :style="`width:${roomRow*50}px;height:${roomColumn*50}px`">
         <li v-for="y in roomColumn" :key="'y' + y">
@@ -21,10 +25,38 @@ export default {
     return {
       roomRow: 4,
       roomColumn: 7,
+      cabinetList: [{
+        id: 1,
+        x: 2,
+        y: 3
+      }, {
+        id: 2,
+        x: 4,
+        y: 7
+      }, {
+        id: 3,
+        x: 4,
+        y: 5
+      }],
+      addX: "",
+      addY: "",
       renderer: null,
       scene: null,
       camera: null,
-      controls: null
+      controls: null,
+      currentMesh: null
+    }
+  },
+  watch: {
+    addX: function(newVal, oldVal) {
+      if (newVal && this.addY) {
+        this.isRepeatAndPreview(); 
+      }
+    },
+    addY: function(newVal, oldVal) {
+      if (newVal && this.addX) {
+        this.isRepeatAndPreview(); 
+      }
     }
   },
   mounted() {
@@ -60,6 +92,7 @@ export default {
       this.createCoordinate(wid, hei); //创建底部坐标
       this.drawX(wid, hei);
       this.drawY(wid, hei);
+      this.drawInitCabinet();
 
       this.renderer.render(this.scene, this.camera);
     },
@@ -107,9 +140,67 @@ export default {
         this.scene.add(line);
       }
     },
+    drawInitCabinet() {
+      for (let i=0; i<this.cabinetList.length; i++) {
+        let geometry = new THREE.PlaneGeometry(80, 80); 
+        let material = new THREE.MeshBasicMaterial({ 
+          color: 0x000000
+        });
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = - Math.PI / 2 ;
+        mesh.position.set((this.cabinetList[i].x-1)*100 + 50, 0, (this.cabinetList[i].y-1)*100 + 50);
+        this.scene.add(mesh);
+      }
+    },
     animate() {
       requestAnimationFrame(this.animate);
       this.renderer.render(this.scene, this.camera);
+    },
+    isRepeatAndPreview() {
+      let findFlag = 0;
+      for (let i=0; i<this.cabinetList.length; i++) {
+        if (this.addX == this.cabinetList[i].x && this.addY == this.cabinetList[i].y) {
+          findFlag = 1;
+          break;
+        }
+      }
+      if (findFlag == 1) {
+        this.scene.remove(this.currentMesh);
+        this.$message({
+          message: '对应位置已使用',
+          type: 'warning'
+        });
+      } else {
+        if (this.addX > 0 && this.addX <= this.roomRow && this.addY > 0 && this.addY <= this.roomColumn) {
+          this.scene.remove(this.currentMesh);
+          let geometry = new THREE.PlaneGeometry(80, 80); 
+          let material = new THREE.MeshBasicMaterial({ 
+            color: 0x0087ed
+          });
+          this.currentMesh = new THREE.Mesh(geometry, material);
+          this.currentMesh.rotation.x = - Math.PI / 2 ;
+          this.currentMesh.position.set((this.addX-1)*100 + 50, 0, (this.addY-1)*100 + 50);
+          this.scene.add(this.currentMesh);
+        } else {
+          this.scene.remove(this.currentMesh);
+          if (this.addX <= 0 || this.addX > this.roomRow) {
+            this.$message({
+              message: '请输入正确行位置',
+              type: 'warning'
+            });
+          } else if (this.addY <= 0 || this.addY > this.roomColumn) {
+            this.$message({
+              message: '请输入正确列位置',
+              type: 'warning'
+            });
+          } else {
+            this.$message({
+              message: '请输入正确位置',
+              type: 'warning'
+            });
+          }
+        }
+      }
     }
   }
 }

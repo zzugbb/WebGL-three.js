@@ -105,6 +105,7 @@ export default {
           let material = new THREE.MeshBasicMaterial({ //基础网格材质
             map: texture
           })
+          material.map.minFilter = THREE.LinearFilter;  // 解决部分浏览器黑屏
           let mesh = new THREE.Mesh(geometry, material); //网格物体,默认平行与 x y 平面
           mesh.rotation.x = - Math.PI / 2 ; //旋转到 x z 平面
           mesh.position.set(wid/2, -1, hei/2);
@@ -206,10 +207,6 @@ export default {
 }
 </script>
 <style>
-.preview-coordinate-ul {
-  white-space: nowrap;
-}
-
 .preview-coordinate {
   display: inline-block;
   width: 50px;
